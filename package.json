@@ -1,0 +1,36 @@
+{
+  "name": "typewise",
+  "version": "0.3.0",
+  "description": "Typewise structured sorting for arbirarily complex data structures",
+  "main": "typewise.js",
+  "dependencies": {
+    "es6-shim": "~0.6"
+  },
+  "optionalDependencies": {
+    "ses": "*",
+    "esprima": "~1",
+    "escodegen": "*",
+    "buffertools": "*"
+  },
+  "devDependencies": {
+    "tap": "*"
+  },
+  "scripts": {
+    "test": "tap test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deanlandolt/typewise.git"
+  },
+  "keywords": [
+    "sort",
+    "order",
+    "collation",
+    "leveldb",
+    "indexeddb",
+    "couchdb"
+  ],
+  "author": "Dean Landolt <dean@deanlandolt.com>",
+  "license": "MIT",
+  "readmeFilename": "README.md"
+}
