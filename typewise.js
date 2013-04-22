@@ -1,5 +1,4 @@
 'use strict';
-
 require('es6-shim');
 
 var typewise = exports;
@@ -13,7 +12,6 @@ var compare = typewise.compare = function(aSource, bSource) {
   if (aSource instanceof Error || bSource instanceof Error) return;
 
   // Unbox possible values to primitives before any NaN checks
-  console.log(aSource)
   var aValue = getValue(aSource);
   var bValue = getValue(bSource);
 
@@ -40,16 +38,15 @@ var compare = typewise.compare = function(aSource, bSource) {
   // Cache typeof for both values
   var aType = typeof aSource;
   var bType = typeof bSource;
-  var typeTag;
   // Loop over type tags and attempt compare
   for (var i = 0, length = typeTags.length; i < length; ++i) {
-    typeTag = typeTags[i];
-    if (type.is[typeTag](aSource, aType)) {
+    var type = typewise.type[typeTags[i]];
+    if (type.is(aSource, aType)) {
       // If b is the same as a then defer to the type's comparator, otherwise a comes first
-      return type.is[typeTag](bSource, bType) ? type.compare[typeTag](aValue, bValue) : -1;
+      return type.is(bSource, bType) ? type.compare(aValue, bValue) : -1;
     }
     // If b is this type but not a then b comes first
-    if (type.is[typeTag](bSource, bType)) return 1;
+    if (type.is(bSource, bType)) return 1;
   }
 };
 
@@ -62,57 +59,7 @@ typewise.equal = function(a, b) {
 };
 
 
-function type() {}
-typewise.type = type;
-
-// Instance checks
-
-type.is = {};
-type.is['undefined'] = function(source) {
-  return source === void 0;
-};
-type.is['null'] = function(source) {
-  return source === null;
-};
-type.is.boolean = function(source, typeOf) {
-  return (typeOf || typeof source) === 'boolean';
-};
-type.is.number = function(source, typeOf) {
-  return (typeOf || typeof source) === 'number';
-};
-type.is.date = function(source) {
-  return source instanceof Date;
-};
-type.is.binary = function(source) {
-  // TODO typed arrays, etc.
-  return source instanceof Buffer;
-};
-type.is.string = function(source, typeOf) {
-  return (typeOf || typeof source) === 'string';
-};
-type.is.set = function(source) {
-  return source instanceof Set;
-};
-type.is.array = function(source) {
-  return Array.isArray(source);
-};
-type.is.map = function(source) {
-  // TODO or plain object
-  return source instanceof Map;
-};
-type.is.regexp = function(source) {
-  return source instanceof RegExp;
-};
-type.is.function = function(source, typeOf) {
-  return (typeOf || typeof source) === 'function';
-};
-
-
-// The list of possible comparators we can choose from
-
-compare.none = function() {
-  return 0;
-};
+// List of possible comparators our types may use
 
 compare.difference = function(a, b) {
   return a - b;
@@ -151,43 +98,109 @@ compare.bytewise = function(a, b) {
 //   compare.bytewise = bytewiseCompare;
 // }
 
-type.compare = {};
-type.compare['undefined'] = compare.none;
-type.compare['null'] = compare.none;
-type.compare.boolean = compare.inequality;
-type.compare.number = compare.difference;
-type.compare.date = compare.difference;
-type.compare.string = compare.inequality;
-type.compare.binary = compare.bytewise;
-type.compare.set = compare.elementwise; // TODO typewise sort elements first?
-type.compare.array = compare.elementwise;
-type.compare.map = compare.elementwise;
-type.compare.regexp = compare.elementwise;
-type.compare.function = compare.elementwise;
 
+// Type System
+// TODO equality?
+typewise.type = {
 
-// Tear apart certain native forms and structure in a way that's serializable and revive them back into equivalent forms
-type.toValue = function(typeTag, value) {
-  var toValue = type.toValue[typeTag];
-  if (toValue) return toValue(value);
-  return value;
-};
-type.fromValue = function(typeTag, syntax) {
-  var fromValue = type.fromValue[typeTag];
-  if (fromValue) return fromValue(syntax);
-  return syntax;
+  'undefined': {
+    is: function(source) {
+      return source === void 0;
+    },
+    compare: compare.inequality
+  },
+
+  'null': {
+    is: function(source) {
+      return source === null;
+    },
+    compare: compare.inequality
+  },
+
+  'boolean': {
+    is: function(source, typeOf) {
+      return (typeOf || typeof source) === 'boolean';
+    },
+    compare: compare.inequality
+  },
+
+  number: {
+    is: function(source, typeOf) {
+      return (typeOf || typeof source) === 'number';
+    },
+    compare: compare.difference
+  },
+
+  date: {
+    is: function(source) {
+      return source instanceof Date;
+    },
+    compare: compare.difference
+  },
+
+  binary: {
+    is: function(source) {
+      // TODO typed arrays, etc.
+      return source instanceof Buffer;
+    },
+    compare: compare.bytewise
+  },
+
+  string: {
+    is: function(source, typeOf) {
+      return (typeOf || typeof source) === 'string';
+    },
+    compare: compare.inequality
+  },
+
+  set: {
+    is: function(source) {
+      return source instanceof Set;
+    },
+    compare: compare.elementwise // TODO typewise sort on elements first?
+  },
+
+  array: {
+    is: function(source) {
+      return Array.isArray(source);
+    },
+    compare: compare.elementwise
+  },
+
+  map: {
+    is: function(source) {
+      // TODO or plain object
+      return source instanceof Map;
+    },
+    compare: compare.elementwise
+  },
+
+  regexp: {
+    is: function(source) {
+      return source instanceof RegExp;
+    },
+    compare: compare.elementwise,
+    serialize: function(value) {
+      value = value.toString();
+      var string = value.toString();
+      var lastSlash = string.lastIndexOf('/');
+      return [ string.slice(1, lastSlash), string.slice(lastSlash + 1) ];
+    },
+    parse: function(syntax) {
+      return RegExp.apply(null, syntax);
+    }
+  },
+
+  'function': {
+    is: function(source, typeOf) {
+      return (typeOf || typeof source) === 'function';
+    },
+    compare: compare.elementwise
+  }
+
 };
 
-type.toValue.regexp = function(value) {
-  value = value.toString();
-  var string = value.toString();
-  var lastSlash = string.lastIndexOf('/');
-  return [ string.slice(1, lastSlash), string.slice(lastSlash + 1) ];
-};
-type.fromValue.regexp = function(syntax) {
-  return RegExp.apply(null, syntax);
-};
-
+// Serialize and parse tear apart certain native forms and structure in a way that's serializable and revive them back into equivalent forms
 // TODO collection types
 
 
@@ -204,7 +217,7 @@ catch (e) {
 }
 
 if (runtime) {
-  type.toValue.function = function(value) {
+  typewise.type['function'].serialize = function(value) {
     var syntax = runtime.esprima.parse('(' + value + ')');
     // TODO validate AST is a FunctionExpression in a ExpressionStatement
     var params = syntax.body[0].expression.params.map(function(param) {
@@ -217,8 +230,7 @@ if (runtime) {
     // We could minify to normalize functions as best as possible
     return params.concat(runtime.escodegen.generate(syntax.body[0].expression.body));
   };
-  type.fromValue.function = function(syntax) {
+  typewise.type['function'].parse = function(syntax) {
     return runtime.context.Function.apply(null, syntax);
   };
 }
-
