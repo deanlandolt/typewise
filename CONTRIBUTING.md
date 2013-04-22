@@ -1,4 +1,4 @@
-# bytewise is an OPEN Open Source Project
+# typewise is an OPEN Open Source Project
 
 -----------------------------------------
 
