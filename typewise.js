@@ -7,6 +7,22 @@ function getValue(source) {
   return source == null ? source : source.valueOf();
 }
 
+var typeOrder = [
+  'undefined',
+  'null',
+  'boolean',
+  'number',
+  'date',
+  'binary',
+  'string',
+  'set',
+  'array',
+  'object',
+  'map',
+  'regexp',
+  'function'
+];
+
 var compare = typewise.compare = function(aSource, bSource) {
   // Error objects are incomparable
   if (aSource instanceof Error || bSource instanceof Error) return;
@@ -20,27 +36,12 @@ var compare = typewise.compare = function(aSource, bSource) {
     throw new TypeError('Cannot compare: ' + aSource + ' to ' + bSource);
   }
 
-  var typeTags = [
-    'undefined',
-    'null',
-    'boolean',
-    'number',
-    'date',
-    'binary',
-    'string',
-    'set',
-    'array',
-    'map',
-    'regexp',
-    'function'
-  ];
-
   // Cache typeof for both values
   var aType = typeof aSource;
   var bType = typeof bSource;
   // Loop over type tags and attempt compare
-  for (var i = 0, length = typeTags.length; i < length; ++i) {
-    var type = typewise.type[typeTags[i]];
+  for (var i = 0, length = typeOrder.length; i < length; ++i) {
+    var type = typewise.types[typeOrder[i]];
     if (type.is(aSource, aType)) {
       // If b is the same as a then defer to the type's comparator, otherwise a comes first
       return type.is(bSource, bType) ? type.compare(aValue, bValue) : -1;
@@ -61,81 +62,81 @@ typewise.equal = function(a, b) {
 
 // List of possible comparators our types may use
 
-compare.difference = function(a, b) {
-  return a - b;
-};
-
-compare.inequality = function(a, b) {
-  return a < b ? -1 : ( a > b ? 1 : 0 );
-};
-
-compare.elementwise = function(a, b) {
-  var result;
-  for (var i = 0, length = Math.min(a.length, b.length); i < length; ++i) {
-    result = compare(a[i], b[i]);
-    if (result) return result;
+var comparators = typewise.comparators = {
+  difference: function(a, b) {
+    return a - b;
+  },
+  inequality: function(a, b) {
+    return a < b ? -1 : ( a > b ? 1 : 0 );
+  },
+  bytewise: function(a, b) {
+    var result;
+    for (var i = 0, length = Math.min(a.length, b.length); i < length; i++) {
+      result = a.get(i) - b.get(i);
+      if (result) return result;
+    }
+    return a.length - b.length;
+  },
+  elementwise: function(a, b) {
+    var result;
+    for (var i = 0, length = Math.min(a.length, b.length); i < length; ++i) {
+      result = compare(a[i], b[i]);
+      if (result) return result;
+    }
+    return a.length - b.length;
   }
-  return a.length - b.length;
 };
-
-compare.bytewise = function(a, b) {
-  var result;
-  for (var i = 0, length = Math.min(a.length, b.length); i < length; i++) {
-    result = a.get(i) - b.get(i);
-    if (result) return result;
-  }
-  return a.length - b.length;
-}
 // FIXME Y U NO WORK BUFFERTOOLS?!
 // Attempt to use the fast native version in buffertools
 // try {
-//   require('buffertools');
-//   compare.bytewise = function(a, b) {
+//   require('buffertools').compare;
+//   comparators.bytewise = function(a, b) {
 //     return a.compare(b);
 //   }
 // }
-// catch (e) {
-//   compare.bytewise = bytewiseCompare;
-// }
+// catch (e) {}
 
 
 // Type System
-// TODO equality?
-typewise.type = {
+// TODO eq, gt, lt, gte, lte
+// Serialize and parse tear apart certain native forms and structure in a way that's serializable and revive them back into equivalent forms
+// TODO revivers for collection types
 
-  'undefined': {
+var types = typewise.types = {
+
+  undefined: {
     is: function(source) {
       return source === void 0;
     },
-    compare: compare.inequality
+    compare: comparators.inequality
   },
 
-  'null': {
+  null: {
     is: function(source) {
       return source === null;
     },
-    compare: compare.inequality
+    compare: comparators.inequality
   },
 
-  'boolean': {
+  boolean: {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'boolean';
     },
-    compare: compare.inequality
+    compare: comparators.inequality
   },
 
   number: {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'number';
     },
-    compare: compare.difference
+    compare: comparators.difference
   },
 
   date: {
     is: function(source) {
       return source instanceof Date;
     },
-    compare: compare.difference
+    compare: comparators.difference
   },
 
   binary: {
@@ -143,43 +144,49 @@ typewise.type = {
       // TODO typed arrays, etc.
       return source instanceof Buffer;
     },
-    compare: compare.bytewise
+    compare: comparators.bytewise
   },
 
   string: {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'string';
     },
-    compare: compare.inequality
+    compare: comparators.inequality
   },
 
   set: {
     is: function(source) {
       return source instanceof Set;
     },
-    compare: compare.elementwise // TODO typewise sort on elements first?
+    compare: comparators.elementwise // TODO typewise sort on elements first?
   },
 
   array: {
     is: function(source) {
       return Array.isArray(source);
     },
-    compare: compare.elementwise
+    compare: comparators.elementwise
+  },
+
+  object: {
+    is: function(source) {
+      return typeof source === 'object' && Object.prototype.toString.call(source) === '[object Object]';
+    },
+    compare: comparators.elementwise
   },
 
   map: {
     is: function(source) {
-      // TODO or plain object
       return source instanceof Map;
     },
-    compare: compare.elementwise
+    compare: comparators.elementwise
   },
 
   regexp: {
     is: function(source) {
       return source instanceof RegExp;
     },
-    compare: compare.elementwise,
+    compare: comparators.elementwise,
     serialize: function(value) {
       value = value.toString();
       var string = value.toString();
@@ -191,34 +198,24 @@ typewise.type = {
     }
   },
 
-  'function': {
+  function: {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'function';
     },
-    compare: compare.elementwise
+    compare: comparators.elementwise
   }
 
 };
 
-// Serialize and parse tear apart certain native forms and structure in a way that's serializable and revive them back into equivalent forms
-// TODO collection types
-
 
 // Attempt to load necessary dependencies to parse and properly revive functions in a safe SES sandbox
-var runtime = {};
 try {
-  runtime.esprima = require('esprima');
-  runtime.escodegen = require('escodegen');
-  runtime.context = require('./context');
-}
-catch (e) {
-  // TODO should we bother with fallbacks?
-  runtime = null;
-}
+  var esprima = require('esprima');
+  var escodegen = require('escodegen');
+  var context = require('./context');
 
-if (runtime) {
-  typewise.type['function'].serialize = function(value) {
-    var syntax = runtime.esprima.parse('(' + value + ')');
+  types.function.serialize = function(value) {
+    var syntax = esprima.parse('(' + value + ')');
     // TODO validate AST is a FunctionExpression in a ExpressionStatement
     var params = syntax.body[0].expression.params.map(function(param) {
       // TODO is this guard necessary?
@@ -228,9 +225,12 @@ if (runtime) {
     });
     // TODO play around with some escodegen options
     // We could minify to normalize functions as best as possible
-    return params.concat(runtime.escodegen.generate(syntax.body[0].expression.body));
+    return params.concat(escodegen.generate(syntax.body[0].expression.body));
   };
-  typewise.type['function'].parse = function(syntax) {
-    return runtime.context.Function.apply(null, syntax);
+  types.function.parse = function(syntax) {
+    return context.Function.apply(null, syntax);
   };
+}
+catch (e) {
+  // TODO should we bother with fallbacks?
 }
