@@ -86,6 +86,8 @@ var samples = {
   ]
 };
 
+
+//Fisher–Yates shuffle
 util.shuffle = function(o) {
   for (var j, x, i = o.length; i; j = parseInt(Math.random() * i, 10), x = o[--i], o[i] = o[j], o[j] = x);
   return o;
@@ -102,7 +104,7 @@ util.getSample = function() {
 util.getArraySample = function(depth) {
   // FIXME clean this up
   var sample = util.getSample();
-  sample.pop(); // pull off undefined
+  sample.pop(); // pop off undefined
   if (!depth) return sample;
   sample.forEach(function(item) {
     sample.push([ item ]);

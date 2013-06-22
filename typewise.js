@@ -54,7 +54,6 @@ var compare = typewise.compare = function(aSource, bSource) {
 // FIXME this is crazy lazy
 var assert = require('assert');
 typewise.equal = function(a, b) {
-  // TODO should this be variadic?
   // TODO stringify functions, ignore prototypes, etc.
   return assert.deepEqual(a, b);
 };
