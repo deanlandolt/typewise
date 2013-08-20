@@ -1,6 +1,7 @@
 'use strict';
 
 var util = exports;
+var bops = require('bops')
 
 var samples = {
   head: [
@@ -50,15 +51,15 @@ var samples = {
     new Date('2001-09-09T01:46:40.001Z')
   ],
   buffer: [
-    new Buffer([]),
-    new Buffer([ 0 ]),
-    new Buffer([ 0, 0 ]),
-    new Buffer([ 0, 1 ]),
-    new Buffer([ 1, 0 ]),
-    new Buffer([ 1, 1 ]),
-    new Buffer([ 255 ]),
-    new Buffer([ 255, 0 ]),
-    new Buffer([ 255, 255 ])
+    bops.create([]),
+    bops.create([ 0 ]),
+    bops.create([ 0, 0 ]),
+    bops.create([ 0, 1 ]),
+    bops.create([ 1, 0 ]),
+    bops.create([ 1, 1 ]),
+    bops.create([ 255 ]),
+    bops.create([ 255, 0 ]),
+    bops.create([ 255, 255 ])
   ],
   string: [
     '',
