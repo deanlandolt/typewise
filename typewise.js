@@ -1,7 +1,7 @@
 'use strict';
 require('es6-shim');
 
-var isBinary = require('bops').is;
+var bops = require('bops');
 
 var typewise = exports;
 
@@ -73,7 +73,7 @@ var comparators = typewise.comparators = {
   bytewise: function(a, b) {
     var result;
     for (var i = 0, length = Math.min(a.length, b.length); i < length; i++) {
-      result = a.get ? a.get(i) - b.get(i) : a[i] - b[i];
+      result = bops.readUInt8(a, i) - bops.readUInt8(b, i);
       if (result) return result;
     }
     return a.length - b.length;
@@ -141,7 +141,7 @@ var types = typewise.types = {
   },
 
   binary: {
-    is: isBinary,
+    is: bops.is,
     compare: comparators.bytewise
   },
 
