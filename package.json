@@ -1,6 +1,6 @@
 {
   "name": "typewise",
-  "version": "0.6.0-pre",
+  "version": "0.6.0",
   "description": "Typewise structured sorting for arbirarily complex data structures",
   "main": "typewise.js",
   "dependencies": {
