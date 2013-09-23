@@ -63,6 +63,15 @@ typewise.equal = function(a, b) {
 
 // List of possible comparators our types may use
 
+function bytewiseCompare(a, b) {
+  var result;
+  for (var i = 0, length = Math.min(a.length, b.length); i < length; i++) {
+    result = bops.readUInt8(a, i) - bops.readUInt8(b, i);
+    if (result) return result;
+  }
+  return a.length - b.length;
+}
+
 var comparators = typewise.comparators = {
   difference: function(a, b) {
     return a - b;
@@ -70,14 +79,7 @@ var comparators = typewise.comparators = {
   inequality: function(a, b) {
     return a < b ? -1 : ( a > b ? 1 : 0 );
   },
-  bytewise: function(a, b) {
-    var result;
-    for (var i = 0, length = Math.min(a.length, b.length); i < length; i++) {
-      result = bops.readUInt8(a, i) - bops.readUInt8(b, i);
-      if (result) return result;
-    }
-    return a.length - b.length;
-  },
+  bytewise: bytewiseCompare,
   elementwise: function(a, b) {
     var result;
     for (var i = 0, length = Math.min(a.length, b.length); i < length; ++i) {
@@ -87,15 +89,17 @@ var comparators = typewise.comparators = {
     return a.length - b.length;
   }
 };
-// FIXME Y U NO WORK BUFFERTOOLS?!
+
 // Attempt to use the fast native version in buffertools
-// try {
-//   require('buffertools').compare;
-//   comparators.bytewise = function(a, b) {
-//     return a.compare(b);
-//   }
-// }
-// catch (e) {}
+try {
+  require('buffertools').compare;
+  comparators.bytewise = function(a, b) {
+    // Bypass buffertools compare if lengths differ
+    if (a.length !== b.length) return bytewiseCompare(a, b);
+    return a.compare(b);
+  }
+}
+catch (e) {}
 
 
 // Type System
