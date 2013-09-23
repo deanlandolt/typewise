@@ -5,19 +5,18 @@
   "main": "typewise.js",
   "dependencies": {
     "es6-shim": "~0.8",
-    "bops": "0.0.6"
+    "bops": "~0.0"
   },
   "optionalDependencies": {
-    "ses": "*",
+    "ses": "~0.0",
     "esprima": "~1",
-    "escodegen": "*",
-    "buffertools": "*"
+    "escodegen": "~0.0",
+    "buffertools": "~1"
   },
   "browser": {
     "./ses": false
   },
   "devDependencies": {
-    "tap": "*",
     "tape": "~1.0.4"
   },
   "scripts": {
