@@ -13,7 +13,7 @@ module.exports = function(sandbox) {
   });
 
   // Intantiate a new SES context
-  vm.runInNewContext(source, copy, 'initSes.js');
+  vm.runInNewContext(source, copy, 'initSES.js');
   return {
     Function: copy.Function
   };

@@ -4,14 +4,14 @@ module.exports = function (types) {
   try {
     var esprima = require('esprima');
     var escodegen = require('escodegen');
-    var context = require('./context');
+    var context = require('./context')(escodegen);
 
     types.function.serialize = function(value) {
       var syntax = esprima.parse('(' + value + ')');
-      // TODO validate AST is a FunctionExpression in a ExpressionStatement
+      // TODO validate AST is a FunctionExpression in an ExpressionStatement
       var params = syntax.body[0].expression.params.map(function(param) {
         // TODO is this guard necessary?
-        if (param.type === 'Identifier') return params.name;
+        if (param.type === 'Identifier') return param.name;
       }).filter(function(param) {
         return param;
       });
