@@ -6,7 +6,7 @@ module.exports = function (types) {
     var escodegen = require('escodegen');
     var context = require('./context')(escodegen);
 
-    types.function.serialize = function(value) {
+    types['function'].serialize = function(value) {
       var syntax = esprima.parse('(' + value + ')');
       // TODO validate AST is a FunctionExpression in an ExpressionStatement
       var params = syntax.body[0].expression.params.map(function(param) {
@@ -17,16 +17,13 @@ module.exports = function (types) {
       });
       // TODO play around with some escodegen options
       // We could minify to normalize functions as best as possible
-      var c 
-      console.log(c = params.concat(escodegen.generate(syntax.body[0].expression.body)))
-      return c; //params.concat(escodegen.generate(syntax.body[0].expression.body));
+      return params.concat(escodegen.generate(syntax.body[0].expression.body));
     };
-    types.function.parse = function(syntax) {
+    types['function'].parse = function(syntax) {
       return context.Function.apply(null, syntax);
     };
   }
   catch (e) {
- 
    // TODO should we bother with fallbacks?
   }
 }

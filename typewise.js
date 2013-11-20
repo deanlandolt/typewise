@@ -1,5 +1,4 @@
 'use strict';
-require('es6-shim');
 
 var bops = require('bops');
 
@@ -17,10 +16,8 @@ var typeOrder = [
   'date',
   'binary',
   'string',
-  'set',
   'array',
   'object',
-  'map',
   'regexp',
   'function'
 ];
@@ -156,13 +153,6 @@ var types = typewise.types = {
     compare: comparators.inequality
   },
 
-  set: {
-    is: function(source) {
-      return source instanceof Set;
-    },
-    compare: comparators.elementwise // TODO typewise sort on elements first?
-  },
-
   array: {
     is: function(source) {
       return Array.isArray(source);
@@ -173,13 +163,6 @@ var types = typewise.types = {
   object: {
     is: function(source) {
       return typeof source === 'object' && Object.prototype.toString.call(source) === '[object Object]';
-    },
-    compare: comparators.elementwise
-  },
-
-  map: {
-    is: function(source) {
-      return source instanceof Map;
     },
     compare: comparators.elementwise
   },
@@ -210,5 +193,4 @@ var types = typewise.types = {
 };
 
 
-if(process.title != 'browser')
-  require('./ses')(types)
+if (process.title != 'browser') require('./ses')(types);

@@ -1,10 +1,9 @@
 {
   "name": "typewise",
-  "version": "0.7.0-pre",
+  "version": "0.7.0",
   "description": "Typewise structured sorting for arbirarily complex data structures",
   "main": "typewise.js",
   "dependencies": {
-    "es6-shim": "~0.8",
     "bops": "~0.0"
   },
   "optionalDependencies": {

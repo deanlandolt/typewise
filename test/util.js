@@ -1,7 +1,10 @@
 'use strict';
 
+var bops = require('bops');
+
 var util = exports;
-var bops = require('bops')
+var MAX_INTEGER = 9007199254740991;
+var EPSILON = 2.220446049250313e-16;
 
 var samples = {
   head: [
@@ -13,7 +16,8 @@ var samples = {
   ],
   number: [
     Number.NEGATIVE_INFINITY,
-    -Number.MAX_INTEGER,
+    -MAX_INTEGER,
+    -MAX_INTEGER + 1,
     -1000,
     -100,
     -10,
@@ -23,12 +27,12 @@ var samples = {
     -0.1,
     -0.01,
     -0.001,
-    -Number.EPSILON * 2,
-    -Number.EPSILON,
+    -EPSILON * 2,
+    -EPSILON,
     -0,
     0,
-    Number.EPSILON,
-    Number.EPSILON * 2,
+    EPSILON,
+    EPSILON * 2,
     0.001,
     0.01,
     0.1,
@@ -38,7 +42,8 @@ var samples = {
     10,
     100,
     1000,
-    Number.MAX_INTEGER,
+    MAX_INTEGER - 1,
+    MAX_INTEGER,
     Number.POSITIVE_INFINITY
   ],
   date: [
@@ -88,7 +93,7 @@ var samples = {
 };
 
 
-//Fisher–Yates shuffle
+// Fisher–Yates shuffle
 util.shuffle = function(o) {
   for (var j, x, i = o.length; i; j = parseInt(Math.random() * i, 10), x = o[--i], o[i] = o[j], o[j] = x);
   return o;
@@ -116,5 +121,5 @@ util.getArraySample = function(depth) {
 };
 
 // TODO we need specific array samples with mixed types
-// We also need tests with specific samples for objects and other maps, sets, and functions
+// We also need tests with specific samples for objects and functions and such
 // We need to expand on the string samples with multibyte utf-8 and characters outside BMP
