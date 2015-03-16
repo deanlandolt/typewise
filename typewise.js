@@ -232,7 +232,8 @@ else {
     comparators.bytewise = function (a, b) {
       // Bypass buffertools compare if lengths differ
       // TODO slice larger buffer to pass to buffertools compare
-      if (a.length !== b.length) return _bytewiseCompare(a, b);
+      if (!a.compare || a.length !== b.length) return _bytewiseCompare(a, b);
+      console.error(a, b)
       return a.compare(b);
     };
   }
