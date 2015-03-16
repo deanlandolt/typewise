@@ -1,25 +1,19 @@
 {
   "name": "typewise",
   "version": "0.8.0-pre",
-  "description": "Typewise structured sorting for arbirarily complex data structures",
+  "description": "Typewise-structured sorting for arbitrarily complex data structures",
   "main": "typewise.js",
   "dependencies": {
-    "bops": "~0.0"
+    "bops": "~0.1"
   },
   "optionalDependencies": {
-    "ses": "~0.0",
-    "esprima": "~1",
-    "escodegen": "~0.0",
     "buffertools": "~1"
   },
-  "browser": {
-    "./ses": false
-  },
   "devDependencies": {
-    "tape": "~1.0.4"
+    "tape": "~1.0"
   },
   "scripts": {
-    "test": "tap test/"
+    "test": "tape test"
   },
   "repository": {
     "type": "git",
@@ -31,7 +25,7 @@
     "collation",
     "leveldb",
     "indexeddb",
-    "couchdb"
+    "keyvalue"
   ],
   "author": "Dean Landolt <dean@deanlandolt.com>",
   "license": "MIT",

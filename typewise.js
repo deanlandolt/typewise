@@ -23,17 +23,18 @@ var typeOrder = [
 ];
 
 var compare = typewise.compare = function(aSource, bSource) {
+  // Short circuit identical objects
+  if (aSource === bSource) return 0;
+
   // Error objects are incomparable
-  if (aSource instanceof Error || bSource instanceof Error) return;
+  if (aSource instanceof Error || bSource instanceof Error) return NaN;
 
   // Unbox possible values to primitives before any NaN checks
   var aValue = getValue(aSource);
   var bValue = getValue(bSource);
 
   // NaN and Invalid Date are incomparable
-  if (aValue !== aValue || bValue !== bValue) {
-    throw new TypeError('Cannot compare: ' + aSource + ' to ' + bSource);
-  }
+  if (aValue !== aValue || bValue !== bValue) return NaN;
 
   // Cache typeof for both values
   var aType = typeof aSource;
@@ -42,33 +43,23 @@ var compare = typewise.compare = function(aSource, bSource) {
   for (var i = 0, length = typeOrder.length; i < length; ++i) {
     var type = typewise.types[typeOrder[i]];
     if (type.is(aSource, aType)) {
+      console.error(typeOrder[i], aValue, bValue)
       // If b is the same as a then defer to the type's comparator, otherwise a comes first
       return type.is(bSource, bType) ? type.compare(aValue, bValue) : -1;
     }
     // If b is this type but not a then b comes first
     if (type.is(bSource, bType)) return 1;
   }
+  // TODO serialize functions, regex, etc.
 };
 
-// FIXME this is crazy lazy
-var assert = require('assert');
 typewise.equal = function(a, b) {
-  // TODO stringify functions, ignore prototypes, etc.
-  return assert.deepEqual(a, b);
+  // TODO optimize specific comparisons
+  return compare(a, b) === 0;
 };
 
 
-// List of possible comparators our types may use
-
-function bytewiseCompare(a, b) {
-  var result;
-  for (var i = 0, length = Math.min(a.length, b.length); i < length; i++) {
-    result = bops.readUInt8(a, i) - bops.readUInt8(b, i);
-    if (result) return result;
-  }
-  return a.length - b.length;
-}
-
+// Possible comparators our types may use
 var comparators = typewise.comparators = {
   difference: function(a, b) {
     return a - b;
@@ -76,7 +67,14 @@ var comparators = typewise.comparators = {
   inequality: function(a, b) {
     return a < b ? -1 : ( a > b ? 1 : 0 );
   },
-  bytewise: bytewiseCompare,
+  bytewise: function (a, b) {
+    var result;
+    for (var i = 0, length = Math.min(a.length, b.length); i < length; ++i) {
+      result = a[i] - b[i];
+      if (result) return result;
+    }
+    return a.length - b.length;
+  },
   elementwise: function(a, b) {
     var result;
     for (var i = 0, length = Math.min(a.length, b.length); i < length; ++i) {
@@ -84,24 +82,27 @@ var comparators = typewise.comparators = {
       if (result) return result;
     }
     return a.length - b.length;
+  },
+  keywise: function (a, b) {
+    var aKeys = [];
+    var bKeys = [];
+    var key;
+    var result;
+    for (key in a) aKeys.push(key);
+    for (key in b) bKeys.push(key);
+    for (var i = 0, length = Math.min(aKeys.length, bKeys.length); i < length; ++i) {
+      result = compare(a[i], b[i]);
+      if (result) return result;
+    }
+    return aKeys.length - bKeys.length;
   }
 };
-
-// Attempt to use the fast native version in buffertools
-try {
-  require('buffertools').compare;
-  comparators.bytewise = function(a, b) {
-    // Bypass buffertools compare if lengths differ
-    if (a.length !== b.length) return bytewiseCompare(a, b);
-    return a.compare(b);
-  }
-}
-catch (e) {}
 
 
 // Type System
 // TODO eq, gt, lt, gte, lte
-// Serialize and parse tear apart certain native forms and structure in a way that's serializable and revive them back into equivalent forms
+// Serialize and parse tear apart certain native forms and structure in a way
+// that's serializable and revive them back into equivalent forms
 // TODO revivers for collection types
 
 var types = typewise.types = {
@@ -124,14 +125,25 @@ var types = typewise.types = {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'boolean';
     },
-    compare: comparators.inequality
+    compare: comparators.inequality,
+    empty: false,
+    unit: true
   },
 
   number: {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'number';
     },
-    compare: comparators.difference
+    compare: comparators.difference,
+    empty: 0,
+    unit: 1,
+    add: function () {
+      var result = 0;
+      for (var i = 0, length = arguments.length; i < length; ++i) {
+        result + arguments[i];
+      }
+      return result;
+    }
   },
 
   date: {
@@ -143,28 +155,42 @@ var types = typewise.types = {
 
   binary: {
     is: bops.is,
-    compare: comparators.bytewise
+    compare: comparators.bytewise,
+    empty: bops.create('') // TODO ICANHAZ immutable buffer?
   },
 
   string: {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'string';
     },
-    compare: comparators.inequality
+    compare: comparators.inequality,
+    empty: ''
   },
 
   array: {
     is: function(source) {
       return Array.isArray(source);
     },
-    compare: comparators.elementwise
+    compare: comparators.elementwise,
+    empty: Object.freeze([]),
+    add: function () {
+      var result = [];
+      for (var i = 0, length = arguments.length; i < length; ++i) {
+        if (!Array.isArray(arguments[i])) {
+          throw new TypeError('Array arguments required');
+        }
+        result = result.concat(arguments[i]);
+      }
+      return result;
+    }
   },
 
   object: {
     is: function(source) {
       return typeof source === 'object' && Object.prototype.toString.call(source) === '[object Object]';
     },
-    compare: comparators.elementwise
+    compare: comparators.keywise,
+    empty: Object.freeze({})
   },
 
   regexp: {
@@ -180,17 +206,32 @@ var types = typewise.types = {
     },
     parse: function(syntax) {
       return RegExp.apply(null, syntax);
-    }
+    },
+    empty: Object.freeze(new RegExp())
   },
 
   function: {
     is: function(source, typeOf) {
       return (typeOf || typeof source) === 'function';
     },
-    compare: comparators.elementwise
+    compare: comparators.elementwise,
+    empty: function (i) { return i }
   }
 
 };
 
 
-if (process.title != 'browser') require('./ses')(types);
+// Use native `Buffer.compare` if available
+if (types.binary.empty.constructor.compare) {
+  comparators.bytewise = types.binary.empty.constructor.compare;
+}
+else {
+  // Attempt to use the fast native version from buffertools
+  try {
+    require('buffertools')
+    comparators.bytewise = function (a, b) {
+      return a.compare(b);
+    };
+  }
+  catch (e) {}
+}
