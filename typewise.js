@@ -43,7 +43,6 @@ var compare = typewise.compare = function(aSource, bSource) {
   for (var i = 0, length = typeOrder.length; i < length; ++i) {
     var type = typewise.types[typeOrder[i]];
     if (type.is(aSource, aType)) {
-      console.error(typeOrder[i], aValue, bValue)
       // If b is the same as a then defer to the type's comparator, otherwise a comes first
       return type.is(bSource, bType) ? type.compare(aValue, bValue) : -1;
     }
@@ -229,7 +228,11 @@ else {
   // Attempt to use the fast native version from buffertools
   try {
     require('buffertools')
+    var _bytewiseCompare = comparators.bytewise;
     comparators.bytewise = function (a, b) {
+      // Bypass buffertools compare if lengths differ
+      // TODO slice larger buffer to pass to buffertools compare
+      if (a.length !== b.length) return _bytewiseCompare(a, b);
       return a.compare(b);
     };
   }
