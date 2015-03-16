@@ -7,7 +7,7 @@
     "bops": "~0.1"
   },
   "optionalDependencies": {
-    "buffertools": "~1"
+    "buffertools": "~2.1"
   },
   "devDependencies": {
     "tape": "~1.0"
