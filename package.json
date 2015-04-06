@@ -1,10 +1,11 @@
 {
   "name": "typewise",
-  "version": "0.8.3-pre",
+  "version": "1.0.0-pre",
   "description": "Typewise-structured sorting for arbitrarily complex data structures",
-  "main": "typewise.js",
+  "main": "index.js",
   "dependencies": {
-    "bops": "~0.1"
+    "bops": "~0.1",
+    "typewise-core": "https://github.com/deanlandolt/typewise-core/tarball/master"
   },
   "optionalDependencies": {
     "buffertools": "~2.1"
@@ -20,9 +21,14 @@
     "url": "https://github.com/deanlandolt/typewise.git"
   },
   "keywords": [
+    "typewise",
+    "types",
+    "compare",
     "sort",
     "order",
     "collation",
+    "complex",
+    "structures",
     "leveldb",
     "indexeddb",
     "keyvalue"
