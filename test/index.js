@@ -1,5 +1,5 @@
-var typewise = require('../');
-var tape = require('tape');
+var typewise = require('../')
+var tape = require('tape')
 
 //
 // run typewise-core tests first

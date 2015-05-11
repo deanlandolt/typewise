@@ -1,15 +1,14 @@
 //
 // extend core typewise collations
 //
-var collation = module.exports = require('typewise-core/collation')
+var collation = require('typewise-core/collation')
 
 //
 // replace base bitwise comparison with faster native versions where available
 //
 try {
-  var bufferCtor = require('bops').create([]).constructor
-  if (bufferCtor.compare) {
-    collation.bitwise = bufferCtor.compare
+  if (Buffer.compare) {
+    collation.bitwise = Buffer.compare
   }
   else {
     try {
@@ -55,3 +54,4 @@ catch (e) {}
 
 // TODO: set, map
 
+module.exports = collation

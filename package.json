@@ -1,20 +1,10 @@
 {
   "name": "typewise",
-  "version": "1.0.0-pre",
+  "version": "1.0.0",
   "description": "Typewise-structured sorting for arbitrarily complex data structures",
   "main": "index.js",
-  "dependencies": {
-    "bops": "~0.1",
-    "typewise-core": "https://github.com/deanlandolt/typewise-core/tarball/master"
-  },
-  "optionalDependencies": {
-    "buffertools": "~2.1"
-  },
-  "devDependencies": {
-    "tape": "~1.0"
-  },
   "scripts": {
-    "test": "tape test"
+    "test": "tape test | faucet"
   },
   "repository": {
     "type": "git",
@@ -35,21 +25,14 @@
   ],
   "author": "Dean Landolt <dean@deanlandolt.com>",
   "license": "MIT",
-  "readmeFilename": "README.md",
-  "testling": {
-    "files": "test/*.js",
-    "browsers": [
-      "ie/8..latest",
-      "firefox/17..latest",
-      "firefox/nightly",
-      "chrome/22..latest",
-      "chrome/canary",
-      "opera/12..latest",
-      "opera/next",
-      "safari/5.1..latest",
-      "ipad/6.0..latest",
-      "iphone/6.0..latest",
-      "android-browser/4.2..latest"
-    ]
+  "dependencies": {
+    "typewise-core": "^1.1"
+  },
+  "optionalDependencies": {
+    "buffertools": "^2.1"
+  },
+  "devDependencies": {
+    "faucet": "0.0.1",
+    "tape": "^1.0"
   }
 }
