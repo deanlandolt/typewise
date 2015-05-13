@@ -14,9 +14,9 @@ A `typewise` type profile can be provide when creating a bytewise codec to contr
 For example, dates have no valid infinatary instances, but something analogous to the "minimum" and "maximum" dates is a useful construct for defining date intervals.
 
 
-## Efficient compare
+## Issues
 
-For more efficient binary comparison `typewise` will try to use the `buffertools` library if available.
+Issues should be reported [here](https://github.com/deanlandolt/bytewise/issues).
 
 
 ## License
