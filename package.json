@@ -1,6 +1,6 @@
 {
   "name": "typewise",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Typewise-structured sorting for arbitrarily complex data structures",
   "main": "index.js",
   "scripts": {
