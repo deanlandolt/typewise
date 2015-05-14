@@ -1,6 +1,10 @@
 # typewise
 
-Typewise structured sorting for arbirarily complex data structures. This package defines and implements the collation used by the [bytewise](https://github.com/deanlandolt/bytewise-core) encoding library.
+Typewise structured sorting for arbirarily complex data structures.
+
+[![build status](https://travis-ci.org/deanlandolt/typewise.svg?branch=master)](https://travis-ci.org/deanlandolt/typewise)
+
+This library defines and implements the collation used by the [bytewise](https://github.com/deanlandolt/bytewise-core) encoding library.
 
 NOTE: the core typewise sorting functionality has been completely rewritten and moved to [typewise-core](https://github.com/deanlandolt/typewise-core). This library extends the data structures and comparators available to support more exotic types like ordered maps and sets, and shortlex-ordered tuples and records.
 
